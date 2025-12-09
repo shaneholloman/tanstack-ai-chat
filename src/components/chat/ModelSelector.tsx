@@ -1,5 +1,6 @@
 import { useStore } from '@tanstack/react-store'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, FileText } from 'lucide-react'
+
 import { Button } from '../ui/button'
 import {
     DropdownMenu,
@@ -62,10 +63,15 @@ export function ModelSelector() {
                                             onClick={() => setProviderAndModel(provider.id, model.id)}
                                             className="cursor-pointer"
                                         >
-                                            <div className="flex items-center justify-between w-full">
-                                                <span className={isSelected ? 'font-medium' : ''}>
-                                                    {model.name}
-                                                </span>
+                                            <div className="flex items-center justify-between w-full gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={isSelected ? 'font-medium' : ''}>
+                                                        {model.name}
+                                                    </span>
+                                                    {model.supportsPDF && (
+                                                        <FileText className="h-3 w-3 text-muted-foreground" />
+                                                    )}
+                                                </div>
                                                 {isSelected && (
                                                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                                                 )}

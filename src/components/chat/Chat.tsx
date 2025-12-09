@@ -7,10 +7,10 @@ import {
     saveAssistantMessage,
     streamChatResponse,
 } from '@/lib/chat-actions'
-import { settingsStore } from '@/lib/store'
+import { settingsStore, AI_PROVIDERS } from '@/lib/store'
 import { ChatInput } from './ChatInput'
 import { EmptyChatState, MessageList } from './ChatMessages'
-import type { Message } from '@/types'
+import type { Message, AttachedFile } from '@/types'
 
 interface ChatProps {
     chatId: string
@@ -37,8 +37,18 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages, streamingContent])
 
-    const handleSubmit = async (userContent: string) => {
+    const handleSubmit = async (userContent: string, files?: AttachedFile[]) => {
         if (!userContent.trim() || isStreaming) return
+
+        // Check if model supports vision when files are attached
+        const currentProvider = AI_PROVIDERS.find((p) => p.id === selectedProvider)
+        const currentModel = currentProvider?.models.find((m) => m.id === selectedModel)
+        const supportsVision = currentModel?.supportsVision || false
+
+        if (files && files.length > 0 && !supportsVision) {
+            console.error('Current model does not support images')
+            return
+        }
 
         const userMessage: Message = {
             id: crypto.randomUUID(),
@@ -61,10 +71,78 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
         setStreamingContent('')
 
         try {
-            const allMessages = [
-                ...messages.map((m) => ({ role: m.role, content: m.content })),
-                { role: 'user' as const, content: userContent },
-            ]
+            // Format messages for vision models if files are attached
+            let allMessages
+            if (files && files.length > 0 && supportsVision) {
+                // When using multimodal, ALL messages must use ContentPart format
+                // Filter and convert previous messages to ContentPart format
+                const previousMessages = messages
+                    .filter((m) => m.content && m.content.trim().length > 0) // Filter empty messages
+                    .map((m) => ({
+                        role: m.role,
+                        content: [
+                            {
+                                type: 'text' as const,
+                                text: m.content,
+                            },
+                        ],
+                    }))
+
+                // Create ContentPart array with text + images using TanStack AI format
+                const contentParts: any[] = [
+                    {
+                        type: 'text' as const,
+                        text: userContent,
+                    },
+                    ...files.map((file) => ({
+                        type: 'image' as const,
+                        source: {
+                            type: 'url' as const,
+                            value: file.data, // Full data URL: data:image/png;base64,...
+                        },
+                        metadata: {
+                            detail: 'high' as const,
+                        },
+                    })),
+                ]
+
+
+                allMessages = [
+                    ...previousMessages,
+                    {
+                        role: 'user' as const,
+                        content: contentParts,
+                    },
+                ]
+
+                // Debug: log messages with truncated base64
+                const debugMessages = allMessages.map((msg) => ({
+                    ...msg,
+                    content: Array.isArray(msg.content)
+                        ? msg.content.map((part: any) =>
+                            part.type === 'image_url'
+                                ? {
+                                    type: 'image_url',
+                                    image_url: {
+                                        url: part.image_url.url.substring(0, 50) + '...[TRUNCATED]',
+                                        detail: part.image_url.detail,
+                                    },
+                                }
+                                : part
+                        )
+                        : msg.content,
+                }))
+                console.log(
+                    '🔍 Client - Sending multimodal messages:',
+                    JSON.stringify(debugMessages, null, 2)
+                )
+            } else {
+                // Regular text-only messages
+                allMessages = [
+                    ...messages.map((m) => ({ role: m.role, content: m.content })),
+                    { role: 'user' as const, content: userContent },
+                ]
+            }
 
             let fullContent = ''
 

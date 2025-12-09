@@ -6,12 +6,14 @@ A modern, full-stack AI chat application built with TanStack Start, featuring mu
 
 - 🤖 **Multi-Provider AI Support** - OpenAI, Anthropic Claude, and Google Gemini
 - 💬 **Real-time Streaming** - Natural typing animation for AI responses
+- 📚 **Chat History** - Persistent chat history with Drizzle ORM
 - ✅ **Form Validation** - TanStack Form with built-in validators for robust input validation
 - 🔍 **Full-Text Search** - Search across chat titles and message content (⌘K)
 - 📱 **Responsive Design** - Mobile-first with collapsible sidebar
 - 🌓 **Dark Mode** - System-aware theme with manual override
 - 💾 **PostgreSQL Database** - Persistent chat history with Drizzle ORM
 - 🎨 **Modern UI** - Built with shadcn/ui components and Tailwind CSS
+- 🐳 **Docker Ready** - Easy deployment with Docker and Docker Compose
 
 ## 🚀 Tech Stack
 
@@ -30,6 +32,10 @@ A modern, full-stack AI chat application built with TanStack Start, featuring mu
 - **[PostgreSQL](https://postgresql.org)** - Relational database
 - **[Vinxi](https://vinxi.vercel.app)** - Full-stack framework
 
+### Runtime
+- **[Bun](https://bun.sh)** - Fast JavaScript runtime (recommended)
+- **Node.js** - Alternative runtime
+
 ### AI Providers
 - **OpenAI** - GPT-4o, GPT-4o Mini
 - **Anthropic** - Claude 3.5 Sonnet, Claude 3.5 Haiku
@@ -39,8 +45,9 @@ A modern, full-stack AI chat application built with TanStack Start, featuring mu
 
 ## 📋 Prerequisites
 
-- **Node.js** 18+ 
-- **PostgreSQL** 14+
+- **Bun** 1.0+ (recommended) or **Node.js** 18+
+- **PostgreSQL** 14+ (or use Docker)
+- **Docker** & **Docker Compose** (optional, for containerized deployment)
 - API keys for at least one AI provider:
   - [OpenAI API key](https://platform.openai.com/api-keys)
   - [Anthropic API key](https://console.anthropic.com/)
@@ -48,15 +55,17 @@ A modern, full-stack AI chat application built with TanStack Start, featuring mu
 
 ## 🛠️ Setup
 
-### 1. Clone and Install
+### Option 1: Local Development with Bun (Recommended)
+
+#### 1. Clone and Install
 
 ```bash
 git clone https://github.com/rs-4/tanstack-ai-demo.git
 cd tanstack-ai-demo
-npm install
+bun install
 ```
 
-### 2. Database Setup
+#### 2. Database Setup
 
 Create a PostgreSQL database:
 
@@ -64,9 +73,15 @@ Create a PostgreSQL database:
 createdb chatapp
 ```
 
-### 3. Environment Variables
+#### 3. Environment Variables
 
-Create a `.env.local` file in the root directory:
+Copy the example environment file and configure your API keys:
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` with your credentials:
 
 ```env
 # Database
@@ -76,23 +91,113 @@ DATABASE_URL=postgresql://user:password@localhost:5432/chatapp
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
 GEMINI_API_KEY=...
+
+# Server Configuration (optional)
+PORT=3000
 ```
 
-### 4. Run Database Migrations
+#### 4. Run Database Migrations
 
 ```bash
-npm run db:push
+bun run db:push
 ```
 
-This will create the necessary tables in your PostgreSQL database.
-
-### 5. Start Development Server
+#### 5. Start Development Server
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000)
+
+---
+
+### Option 2: Local Development with npm
+
+```bash
+git clone https://github.com/rs-4/tanstack-ai-demo.git
+cd tanstack-ai-demo
+npm install
+cp .env.example .env.local
+# Edit .env.local with your credentials
+npm run db:push
+npm run dev
+```
+
+---
+
+### Option 3: Docker (Recommended for Production)
+
+#### 1. Clone and Configure
+
+```bash
+git clone https://github.com/rs-4/tanstack-ai-demo.git
+cd tanstack-ai-demo
+cp .env.example .env.local
+```
+
+Edit `.env.local` with your API keys:
+
+```env
+# AI Provider API Keys (at least one required)
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=...
+```
+
+> **Note:** The `DATABASE_URL` is automatically configured by Docker Compose.
+
+#### 2. Start with Docker Compose
+
+```bash
+docker-compose up -d --build
+```
+
+This will:
+- Build the application using Bun
+- Start a PostgreSQL 16 database
+- Run Drizzle migrations automatically
+- Start the application on port 3000
+
+Visit [http://localhost:3000](http://localhost:3000)
+
+#### 3. Stop the Services
+
+```bash
+docker-compose down
+```
+
+To also remove the database volume:
+
+```bash
+docker-compose down -v
+```
+
+---
+
+### Option 4: Cloudflare Pages
+
+#### 1. Configure Environment
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` and set `DEPLOY_TARGET=cloudflare`.
+
+#### 2. Build for Cloudflare
+
+```bash
+bun run build:cloudflare
+```
+
+#### 3. Deploy to Cloudflare
+
+```bash
+bun run deploy
+```
+
+> **Note:** For Cloudflare deployment, you'll need to configure your database connection using Cloudflare's Hyperdrive or an external PostgreSQL provider like Neon.
 
 ## 📁 Project Structure
 
@@ -143,13 +248,33 @@ Press **⌘K** (Mac) or **Ctrl+K** (Windows/Linux) to open the search dialog. Se
 
 ## 🔧 Available Scripts
 
+### Development
+
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run db:push      # Push schema changes to database
-npm run db:studio    # Open Drizzle Studio (database GUI)
+bun run dev          # Start development server
+bun run build        # Build for production
+bun run start        # Start production server
+bun run format       # Format code with Prettier
 ```
+
+### Database
+
+```bash
+bun run db:push      # Push schema changes to database
+bun run db:generate  # Generate migrations
+bun run db:migrate   # Run migrations
+bun run db:studio    # Open Drizzle Studio (database GUI)
+```
+
+### Docker
+
+```bash
+bun run docker:build # Build Docker image
+bun run docker:up    # Start containers with Docker Compose
+bun run docker:down  # Stop containers
+```
+
+> **Note:** Replace `bun` with `npm` if using Node.js.
 
 ## 🎨 Customization
 
@@ -192,5 +317,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Built with:
 - [TanStack](https://tanstack.com) - Amazing full-stack tooling
+- [Bun](https://bun.sh) - Fast JavaScript runtime
 - [shadcn/ui](https://ui.shadcn.com) - Beautiful component library
 - [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS framework
+

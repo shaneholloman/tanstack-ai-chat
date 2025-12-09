@@ -1,31 +1,19 @@
-export interface Chat {
-  id: string
-  title: string
-  isPinned: boolean
-  createdAt: Date
-  updatedAt: Date
-}
-
-// Frontend Message type (used in components)
 export interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  createdAt: Date
+    id: string
+    role: 'user' | 'assistant'
+    content: string
+    createdAt: Date
 }
 
-// Database Message type (used in server functions)
-export interface DBMessage extends Message {
-  chatId: string
+export interface AttachedFile {
+    id: string
+    name: string
+    type: string
+    size: number
+    data: string // base64
+    preview?: string // URL for preview
 }
 
-export interface SearchResult {
-  chatId: string
-  chatTitle: string
-  matchedContent: string | null
-}
-
-export interface StreamChunk {
-  type: 'content' | 'error'
-  content: string
+export interface MessageWithFiles extends Message {
+    files?: AttachedFile[]
 }

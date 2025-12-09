@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+
+# Build outputs
+.output
+.vinxi
+.nitro
+.tanstack
+.wrangler
+dist
+dist-ssr
+
+# Environment files
+.env
+.env.local
+*.local
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Misc
+*.md
+LICENSE
