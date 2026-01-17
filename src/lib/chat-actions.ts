@@ -3,9 +3,9 @@ import { db } from '@/db'
 import { chats, messages } from '@/db/schema'
 import { desc, eq, asc } from 'drizzle-orm'
 import { chat } from '@tanstack/ai'
-import { openaiText } from '@tanstack/ai-openai'
-import { anthropicText } from '@tanstack/ai-anthropic'
-import { geminiText } from '@tanstack/ai-gemini'
+import { createOpenaiChat } from '@tanstack/ai-openai'
+import { createAnthropicChat } from '@tanstack/ai-anthropic'
+import { createGeminiChat } from '@tanstack/ai-gemini'
 import { ollamaText } from '@tanstack/ai-ollama'
 import { createGrokText } from '@tanstack/ai-grok'
 
@@ -192,15 +192,39 @@ export const streamChatResponse = createServerFn({
     const getAdapter = () => {
         switch (provider) {
             case 'anthropic':
-                return anthropicText(model as Parameters<typeof anthropicText>[0])
+                return createAnthropicChat(
+                    model as Parameters<typeof createAnthropicChat>[0],
+                    process.env.ANTHROPIC_API_KEY!,
+                    process.env.ANTHROPIC_BASE_URL
+                        ? { baseURL: process.env.ANTHROPIC_BASE_URL }
+                        : undefined,
+                )
             case 'gemini':
-                return geminiText(model as Parameters<typeof geminiText>[0])
+                return createGeminiChat(
+                    model as Parameters<typeof createGeminiChat>[0],
+                    process.env.GEMINI_API_KEY!,
+                    process.env.GEMINI_BASE_URL
+                        ? { baseURL: process.env.GEMINI_BASE_URL }
+                        : undefined,
+                )
             case 'ollama':
                 return ollamaText(model as Parameters<typeof ollamaText>[0])
             case 'grok':
-                return createGrokText(model as Parameters<typeof createGrokText>[0], process.env.XAI_API_KEY!)
+                return createGrokText(
+                    model as Parameters<typeof createGrokText>[0],
+                    process.env.XAI_API_KEY!,
+                    process.env.XAI_BASE_URL
+                        ? { baseURL: process.env.XAI_BASE_URL }
+                        : undefined,
+                )
             default:
-                return openaiText(model as Parameters<typeof openaiText>[0])
+                return createOpenaiChat(
+                    model as Parameters<typeof createOpenaiChat>[0],
+                    process.env.OPENAI_API_KEY!,
+                    process.env.OPENAI_BASE_URL
+                        ? { baseURL: process.env.OPENAI_BASE_URL }
+                        : undefined,
+                )
         }
     }
 
